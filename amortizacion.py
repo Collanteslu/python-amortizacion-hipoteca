@@ -63,10 +63,12 @@ def calcular_amortizacion():
             ["1", "2"]
         )
     else:
+        # Si no se añade amortización, definimos valores por defecto:
         amortizacion_adicional = 0
-        tipo_amortizacion_final = "2"  # Por defecto, reducir plazo si no hay amortización adicional
+        tipo_amortizacion = "0"  # Valor que indica "sin amortización adicional"
+        tipo_amortizacion_final = "2"  # Por defecto, reducir plazo
 
-    # Preguntar si se desea mantener la suma de cuota + amortización constante
+    # Preguntar si se desea mantener la suma de cuota + amortización constante (solo aplica si se reduce la cuota)
     mantener_pago_constante = False
     if tipo_amortizacion_final == "1":
         mantener_pago_constante = validar_opcion(
@@ -82,7 +84,7 @@ def calcular_amortizacion():
     total_intereses_pagados = 0  # Variable para acumular los intereses totales
 
     for mes in range(1, meses_restantes + 1):
-        # Aplicar amortización adicional
+        # Aplicar amortización adicional solo si se ha definido
         if tipo_amortizacion == "1" and mes == 1:
             saldo_pendiente -= amortizacion_adicional
         elif tipo_amortizacion == "2":
@@ -90,7 +92,7 @@ def calcular_amortizacion():
         elif tipo_amortizacion == "3" and mes % 12 == 0:
             saldo_pendiente -= amortizacion_adicional
 
-        # Recalcular la cuota si se elige amortizar cuota
+        # Recalcular la cuota si se elige reducir la cuota
         if tipo_amortizacion_final == "1":
             cuota_mensual = calcular_cuota_frances(saldo_pendiente, interes_anual, meses_restantes - mes + 1)
         else:
@@ -136,9 +138,9 @@ def calcular_amortizacion():
     df = pd.DataFrame(tabla_amortizacion)
 
     # Configurar pandas para mostrar todas las filas y columnas
-    pd.set_option('display.max_rows', None)  # Mostrar todas las filas
+    pd.set_option('display.max_rows', None)     # Mostrar todas las filas
     pd.set_option('display.max_columns', None)  # Mostrar todas las columnas
-    pd.set_option('display.width', 1000)  # Ajustar el ancho para evitar recortes
+    pd.set_option('display.width', 1000)          # Ajustar el ancho para evitar recortes
 
     print("\n=== Tabla de Amortización Completa ===")
     print(df)
@@ -146,6 +148,8 @@ def calcular_amortizacion():
     # Mostrar el total de intereses pagados
     print(f"\nTotal de intereses pagados: {total_intereses_pagados:.2f} €")
 
+    # Si deseas guardar la tabla en un archivo CSV, descomenta la siguiente línea:
     # df.to_csv("tabla_amortizacion.csv", index=False)
+
 # Ejecutar la aplicación
 calcular_amortizacion()
