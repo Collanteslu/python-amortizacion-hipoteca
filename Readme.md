@@ -36,7 +36,7 @@ pip install pandas
    ```
 2. **Ejecuta el script**
    ```sh
-   python calculadora.py
+   python amortizacion.py
    ```
 3. **Sigue las instrucciones** en la consola para ingresar los datos de la hipoteca y amortizaciones adicionales.
 
