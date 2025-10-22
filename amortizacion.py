@@ -84,31 +84,37 @@ def calcular_amortizacion():
     total_intereses_pagados = 0  # Variable para acumular los intereses totales
 
     for mes in range(1, meses_restantes + 1):
-        # Aplicar amortización adicional solo si se ha definido
-        if tipo_amortizacion == "1" and mes == 1:
-            saldo_pendiente -= amortizacion_adicional
-        elif tipo_amortizacion == "2":
-            saldo_pendiente -= amortizacion_adicional
-        elif tipo_amortizacion == "3" and mes % 12 == 0:
-            saldo_pendiente -= amortizacion_adicional
-
         # Recalcular la cuota si se elige reducir la cuota
         if tipo_amortizacion_final == "1":
             cuota_mensual = calcular_cuota_frances(saldo_pendiente, interes_anual, meses_restantes - mes + 1)
         else:
             cuota_mensual = cuota_mensual_original
 
-        # Calcular intereses y amortización
+        # Calcular intereses sobre el saldo pendiente al inicio del mes
         interes_mes = saldo_pendiente * interes_mensual
         amortizacion_mes = cuota_mensual - interes_mes
 
-        # Ajustar si se mantiene el pago total constante
-        if mantener_pago_constante:
-            amortizacion_mes += pago_total_constante - cuota_mensual
-            cuota_mensual = pago_total_constante - amortizacion_mes
+        # Determinar si hay amortización adicional este mes
+        amortizacion_adicional_mes = 0
+        if tipo_amortizacion == "1" and mes == 1:
+            amortizacion_adicional_mes = amortizacion_adicional
+        elif tipo_amortizacion == "2":
+            amortizacion_adicional_mes = amortizacion_adicional
+        elif tipo_amortizacion == "3" and mes % 12 == 0:
+            amortizacion_adicional_mes = amortizacion_adicional
 
-        # Actualizar saldo pendiente
+        # Ajustar si se mantiene el pago total constante
+        if mantener_pago_constante and tipo_amortizacion_final == "1":
+            # La diferencia entre pago original y nueva cuota se suma a amortización adicional
+            diferencia_cuota = cuota_mensual_original - cuota_mensual
+            amortizacion_adicional_mes += diferencia_cuota
+
+        # Actualizar saldo pendiente con amortización normal
         saldo_pendiente -= amortizacion_mes
+
+        # Aplicar amortización adicional DESPUÉS de la cuota normal
+        saldo_pendiente -= amortizacion_adicional_mes
+
         if saldo_pendiente < 0:
             saldo_pendiente = 0
 
@@ -121,11 +127,7 @@ def calcular_amortizacion():
             "Cuota": round(cuota_mensual, 2),
             "Intereses": round(interes_mes, 2),
             "Amortización": round(amortizacion_mes, 2),
-            "Amortización Adicional": round(amortizacion_adicional, 2) if (
-                (tipo_amortizacion == "1" and mes == 1) or
-                (tipo_amortizacion == "2") or
-                (tipo_amortizacion == "3" and mes % 12 == 0)
-            ) else 0,
+            "Amortización Adicional": round(amortizacion_adicional_mes, 2),
             "Saldo Pendiente": round(saldo_pendiente, 2),
             "Intereses Acumulados": round(total_intereses_pagados, 2)
         })
@@ -148,8 +150,19 @@ def calcular_amortizacion():
     # Mostrar el total de intereses pagados
     print(f"\nTotal de intereses pagados: {total_intereses_pagados:.2f} €")
 
-    # Si deseas guardar la tabla en un archivo CSV, descomenta la siguiente línea:
-    # df.to_csv("tabla_amortizacion.csv", index=False)
+    # Preguntar si desea exportar a CSV
+    exportar_csv = validar_opcion(
+        "\n¿Deseas exportar la tabla a CSV? (1: Sí / 2: No): ",
+        ["1", "2"]
+    )
+    if exportar_csv == "1":
+        nombre_archivo = input("Nombre del archivo (por defecto: tabla_amortizacion.csv): ").strip()
+        if not nombre_archivo:
+            nombre_archivo = "tabla_amortizacion.csv"
+        if not nombre_archivo.endswith('.csv'):
+            nombre_archivo += '.csv'
+        df.to_csv(nombre_archivo, index=False)
+        print(f"Tabla exportada exitosamente a: {nombre_archivo}")
 
 # Ejecutar la aplicación
 calcular_amortizacion()
